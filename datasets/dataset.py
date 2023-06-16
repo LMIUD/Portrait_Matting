@@ -36,9 +36,9 @@ import numpy as np
 from PIL import Image
 from scipy import misc, ndimage
 
-import torch
-from torch.utils.data import Dataset
-from torchvision import transforms, utils
+import paddle
+from paddle.io import Dataset
+from paddle.vision import transforms
 from scipy.ndimage import morphology
 
 # ignore warnings
@@ -182,7 +182,7 @@ class ToTensor(object):
         # torch image: C X H X W
         image = image.transpose((2, 0, 1))
         alpha = alpha.transpose((2, 0, 1))
-        return {'image': torch.from_numpy(image), 'alpha': torch.from_numpy(alpha)}
+        return {'image': paddle.to_tensor(image), 'alpha': paddle.to_tensor(alpha)}
 
 
 class AdobeImageMattingDataset(Dataset):
@@ -282,7 +282,7 @@ if __name__ == "__main__":
             ToTensor()]
         )
     )
-    datasetloader = torch.utils.data.DataLoader(
+    datasetloader = paddle.io.DataLoader(
         dataset,
         batch_size=1,
         shuffle=True,
