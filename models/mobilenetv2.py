@@ -1,47 +1,12 @@
-"""
-This MobileNetV2 implementation is modified from the following repository:
-https://github.com/tonylins/pytorch-mobilenet-v2
-https://github.com/CSAILVision/semantic-segmentation-pytorch
-
-IndexNet Matting
-
-Indices Matter: Learning to Index for Deep Image Matting
-IEEE/CVF International Conference on Computer Vision, 2019
-
-This software is strictly limited to academic purposes only
-Copyright (c) 2019, Hao Lu (hao.lu@adelaide.edu.au)
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
-
 import os
 import sys
 import math
 from time import time
 from functools import partial
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
 
 from hlaspp import ASPP
 from lib.nn import SynchronizedBatchNorm2d
@@ -55,11 +20,9 @@ try:
 except ImportError:
     from urllib.request import urlretrieve
 
-
 model_urls = {
     'mobilenetv2': 'http://sceneparsing.csail.mit.edu/model/pretrained_resnet/mobilenet_v2.pth.tar',
 }
-
 
 CORRESP_NAME = {
     # layer0
@@ -337,25 +300,26 @@ CORRESP_NAME = {
     "features.17.conv.7.running_var": "layer7.0.conv.7.running_var",
 }
 
+
 def pred(inp, oup, conv_operator, k, batch_norm):
     # the last 1x1 convolutional layer is very important
     hlConv2d = hlconv[conv_operator]
     return nn.Sequential(
         hlConv2d(inp, oup, k, 1, batch_norm),
-        nn.Conv2d(oup, oup, k, 1, padding=k//2, bias=False)
+        nn.Conv2d(oup, oup, k, 1, padding=k // 2, bias=False)
     )
 
 
-class InvertedResidual(nn.Module):
-    def __init__(self, inp, oup, stride, dilation, expand_ratio, batch_norm):
+class InvertedResidual(nn.Module):  # 倒残差网络
+    def __init__(self, inp, oup, stride, dilation, expand_ratio, batch_norm):  # expand_radio为扩展因子
         super(InvertedResidual, self).__init__()
         self.stride = stride
         assert stride in [1, 2]
 
         BatchNorm2d = batch_norm
 
-        hidden_dim = round(inp * expand_ratio)
-        self.use_res_connect = self.stride == 1 and inp == oup
+        hidden_dim = round(inp * expand_ratio)  # 卷积核个数
+        self.use_res_connect = self.stride == 1 and inp == oup  # 判断是否使用捷径分支
         self.kernel_size = 3
         self.dilation = dilation
 
@@ -371,11 +335,11 @@ class InvertedResidual(nn.Module):
             )
         else:
             self.conv = nn.Sequential(
-                # pw
+                # pw 1*1
                 nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
                 BatchNorm2d(hidden_dim),
                 nn.ReLU6(inplace=True),
-                # dw
+                # dw 要求groups=输入个数
                 nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 0, dilation, groups=hidden_dim, bias=False),
                 BatchNorm2d(hidden_dim),
                 nn.ReLU6(inplace=True),
@@ -399,29 +363,30 @@ class InvertedResidual(nn.Module):
                 m.dilation = (dilate, dilate)
                 m.padding = (dilate, dilate)
 
-    def forward(self, x):
+    def forward(self, x):  # 正向传播过程，x为输入特征矩阵
         x_pad = self.fixed_padding(x, self.kernel_size, dilation=self.dilation)
         if self.use_res_connect:
             return x + self.conv(x_pad)
         else:
             return self.conv(x_pad)
 
+
 #######################################################################################
 # DeepLabv3+ B1
 #######################################################################################
 class MobileNetV2DeepLabv3Plus(nn.Module):
     def __init__(
-        self,
-        output_stride=16,
-        input_size=321,
-        width_mult=1.,
-        conv_operator='std_conv',
-        decoder_kernel_size=5,
-        apply_aspp=False,
-        freeze_bn=False,
-        sync_bn=False,
-        **kwargs
-        ):
+            self,
+            output_stride=16,
+            input_size=321,
+            width_mult=1.,
+            conv_operator='std_conv',
+            decoder_kernel_size=5,
+            apply_aspp=False,
+            freeze_bn=False,
+            sync_bn=False,
+            **kwargs
+    ):
         super(MobileNetV2DeepLabv3Plus, self).__init__()
         self.width_mult = width_mult
 
@@ -454,7 +419,7 @@ class MobileNetV2DeepLabv3Plus(nn.Module):
         for i, setting in enumerate(inverted_residual_setting):
             s = setting[4]
             if current_stride == output_stride:
-                inverted_residual_setting[i][4] = 1 # change stride
+                inverted_residual_setting[i][4] = 1  # change stride
                 rate *= s
                 inverted_residual_setting[i][5] = rate
             else:
@@ -473,10 +438,10 @@ class MobileNetV2DeepLabv3Plus(nn.Module):
 
         ### context aggregation ###
         self.dconv_pp = aspp(320, 256, output_stride=output_stride, batch_norm=BatchNorm2d)
-        
+
         ### decoder ###
         self.decoder = decoder(conv_operator, decoder_kernel_size, batch_norm=BatchNorm2d)
-        
+
         self.pred = nn.Sequential(
             nn.Conv2d(256, 1, 1, 1, padding=0, bias=False),
             BatchNorm2d(1),
@@ -524,7 +489,7 @@ class MobileNetV2DeepLabv3Plus(nn.Module):
         # prediction
         l = self.pred(l)
         l = F.interpolate(l, size=x.size()[2:], mode='bilinear', align_corners=True)
-        
+
         return l
 
     def freeze_bn(self):
@@ -576,17 +541,17 @@ class CRPBlock(nn.Module):
 
 class hlMobileNetV2RefineNet(nn.Module):
     def __init__(
-        self,
-        output_stride=16,
-        input_size=321,
-        width_mult=1.,
-        conv_operator='std_conv',
-        decoder_kernel_size=5,
-        apply_aspp=False,
-        freeze_bn=False,
-        sync_bn=False,
-        **kwargs
-        ):
+            self,
+            output_stride=16,
+            input_size=321,
+            width_mult=1.,
+            conv_operator='std_conv',
+            decoder_kernel_size=5,
+            apply_aspp=False,
+            freeze_bn=False,
+            sync_bn=False,
+            **kwargs
+    ):
         super(hlMobileNetV2RefineNet, self).__init__()
         self.width_mult = width_mult
 
@@ -617,7 +582,7 @@ class hlMobileNetV2RefineNet(nn.Module):
         for i, setting in enumerate(inverted_residual_setting):
             s = setting[4]
             if current_stride == output_stride:
-                inverted_residual_setting[i][4] = 1 # change stride
+                inverted_residual_setting[i][4] = 1  # change stride
                 rate *= s
                 inverted_residual_setting[i][5] = rate
             else:
@@ -715,7 +680,7 @@ class hlMobileNetV2RefineNet(nn.Module):
         # prediction
         l = self.pred(l2)
         l = F.interpolate(l, size=x.size()[2:], mode='bilinear', align_corners=True)
-        
+
         return l
 
     def freeze_bn(self):
@@ -745,17 +710,17 @@ class hlMobileNetV2RefineNet(nn.Module):
 #######################################################################################
 class hlMobileNetV2UNetDecoder(nn.Module):
     def __init__(
-        self, 
-        output_stride=32, 
-        input_size=320, 
-        width_mult=1., 
-        conv_operator='std_conv',
-        decoder_kernel_size=5,
-        apply_aspp=False,
-        freeze_bn=False,
-        sync_bn=False,
-        **kwargs
-        ):
+            self,
+            output_stride=32,
+            input_size=320,
+            width_mult=1.,
+            conv_operator='std_conv',
+            decoder_kernel_size=5,
+            apply_aspp=False,
+            freeze_bn=False,
+            sync_bn=False,
+            **kwargs
+    ):
         super(hlMobileNetV2UNetDecoder, self).__init__()
         self.width_mult = width_mult
         self.output_stride = output_stride
@@ -784,12 +749,12 @@ class hlMobileNetV2UNetDecoder(nn.Module):
         assert input_size % output_stride == 0
         initial_channel = int(initial_channel * width_mult)
         self.layer0 = conv_bn(4, initial_channel, 3, 2, BatchNorm2d)
-        self.layer0.apply(partial(self._stride, stride=1)) # set stride = 1
+        self.layer0.apply(partial(self._stride, stride=1))  # set stride = 1
         current_stride *= 2
         # building bottleneck layers
         for i, setting in enumerate(inverted_residual_setting):
             s = setting[4]
-            inverted_residual_setting[i][4] = 1 # change stride
+            inverted_residual_setting[i][4] = 1  # change stride
             if current_stride == output_stride:
                 rate *= s
                 inverted_residual_setting[i][5] = rate
@@ -802,43 +767,52 @@ class hlMobileNetV2UNetDecoder(nn.Module):
         self.layer5 = self._build_layer(block, inverted_residual_setting[4], BatchNorm2d)
         self.layer6 = self._build_layer(block, inverted_residual_setting[5], BatchNorm2d, downsample=True)
         self.layer7 = self._build_layer(block, inverted_residual_setting[6], BatchNorm2d)
-        
+
         if output_stride == 32:
-            self.pool0  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool2  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool3  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool4  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool6  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool0 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool2 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool3 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool4 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool6 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
         elif output_stride == 16:
-            self.pool0  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool2  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool3  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool4  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool0 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool2 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool3 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool4 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
         elif output_stride == 8:
-            self.pool0  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool2  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            self.pool3  = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
-            
+            self.pool0 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool2 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+            self.pool3 = nn.MaxPool2d((2, 2), stride=2, padding=0, return_indices=True)
+
         # freeze encoder batch norm layers
         if freeze_bn:
             self.freeze_bn()
-        
+
         ### context aggregation ###
         if apply_aspp:
-            self.dconv_pp = aspp(int(320*width_mult), int(160*width_mult), output_stride=output_stride, batch_norm=BatchNorm2d, width_mult=width_mult)
+            self.dconv_pp = aspp(int(320 * width_mult), int(160 * width_mult), output_stride=output_stride,
+                                 batch_norm=BatchNorm2d, width_mult=width_mult)
         else:
-            self.dconv_pp = conv_bn(int(320*width_mult), int(160*width_mult), 1, 1, BatchNorm2d)
+            self.dconv_pp = conv_bn(int(320 * width_mult), int(160 * width_mult), 1, 1, BatchNorm2d)
 
         ### decoder ###
-        self.decoder_layer6 = decoder_block(int(160*width_mult)*2, int(96*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer5 = decoder_block(int(96*width_mult)*2, int(64*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer4 = decoder_block(int(64*width_mult)*2, int(32*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer3 = decoder_block(int(32*width_mult)*2, int(24*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer2 = decoder_block(int(24*width_mult)*2, int(16*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer1 = decoder_block(int(16*width_mult)*2, int(32*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer0 = decoder_block(int(32*width_mult)*2, int(32*width_mult), conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer6 = decoder_block(int(160 * width_mult) * 2, int(96 * width_mult),
+                                            conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer5 = decoder_block(int(96 * width_mult) * 2, int(64 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer4 = decoder_block(int(64 * width_mult) * 2, int(32 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer3 = decoder_block(int(32 * width_mult) * 2, int(24 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer2 = decoder_block(int(24 * width_mult) * 2, int(16 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer1 = decoder_block(int(16 * width_mult) * 2, int(32 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer0 = decoder_block(int(32 * width_mult) * 2, int(32 * width_mult), conv_operator=conv_operator,
+                                            kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
 
-        self.pred = pred(int(32*width_mult), 1, conv_operator, k=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.pred = pred(int(32 * width_mult), 1, conv_operator, k=decoder_kernel_size, batch_norm=BatchNorm2d)
 
         self._initialize_weights()
 
@@ -876,37 +850,37 @@ class hlMobileNetV2UNetDecoder(nn.Module):
 
     def forward(self, x):
         # encode
-        l0 = self.layer0(x)                 # 4x320x320
-        l0p, idx0 = self.pool0(l0)          # 32x160x160
+        l0 = self.layer0(x)  # 4x320x320
+        l0p, idx0 = self.pool0(l0)  # 32x160x160
 
-        l1 = self.layer1(l0p)               # 16x160x160
-        l2 = self.layer2(l1)                # 24x160x160
-        l2p, idx2 = self.pool2(l2)          # 24x80x80
-        
-        l3 = self.layer3(l2p)               # 32x80x80
-        l3p, idx3 = self.pool3(l3)          # 32x40x40
+        l1 = self.layer1(l0p)  # 16x160x160
+        l2 = self.layer2(l1)  # 24x160x160
+        l2p, idx2 = self.pool2(l2)  # 24x80x80
 
-        l4 = self.layer4(l3p)               # 64x40x40
+        l3 = self.layer3(l2p)  # 32x80x80
+        l3p, idx3 = self.pool3(l3)  # 32x40x40
+
+        l4 = self.layer4(l3p)  # 64x40x40
         if self.output_stride == 8:
             l4p, idx4 = l4, None
         else:
-            l4p, idx4 = self.pool4(l4)      # 64x20x20
+            l4p, idx4 = self.pool4(l4)  # 64x20x20
 
-        l5 = self.layer5(l4p)               # 96x20x20
+        l5 = self.layer5(l4p)  # 96x20x20
 
-        l6 = self.layer6(l5)                # 160x20x20
+        l6 = self.layer6(l5)  # 160x20x20
         if self.output_stride == 32:
-            l6p, idx6 = self.pool6(l6)      # 160x10x10
+            l6p, idx6 = self.pool6(l6)  # 160x10x10
         elif self.output_stride == 16 or self.output_stride == 8:
             l6p, idx6 = l6, None
         else:
             raise NotImplementedError
 
-        l7 = self.layer7(l6p)               # 320x10x10
+        l7 = self.layer7(l6p)  # 320x10x10
 
         # pyramid pooling
-        l = self.dconv_pp(l7)               # 160x10x10
-        
+        l = self.dconv_pp(l7)  # 160x10x10
+
         # decode
         l = self.decoder_layer6(l, l6, idx6)
         l = self.decoder_layer5(l, l5)
@@ -947,20 +921,20 @@ class hlMobileNetV2UNetDecoder(nn.Module):
 #######################################################################################
 class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
     def __init__(
-        self, 
-        output_stride=32, 
-        input_size=320, 
-        width_mult=1., 
-        conv_operator='std_conv',
-        decoder_kernel_size=5,
-        apply_aspp=False,
-        freeze_bn=False,
-        use_nonlinear=False,
-        use_context=False,
-        indexnet='holistic',
-        index_mode='o2o',
-        sync_bn=False
-        ):
+            self,
+            output_stride=32,
+            input_size=320,
+            width_mult=1.,
+            conv_operator='std_conv',
+            decoder_kernel_size=5,
+            apply_aspp=False,
+            freeze_bn=False,
+            use_nonlinear=False,
+            use_context=False,
+            indexnet='holistic',
+            index_mode='o2o',
+            sync_bn=False
+    ):
         super(hlMobileNetV2UNetDecoderIndexLearning, self).__init__()
         self.width_mult = width_mult
         self.output_stride = output_stride
@@ -1003,12 +977,12 @@ class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
         # assert input_size % output_stride == 0
         initial_channel = int(initial_channel * width_mult)
         self.layer0 = conv_bn(4, initial_channel, 3, 2, BatchNorm2d)
-        self.layer0.apply(partial(self._stride, stride=1)) # set stride = 1
+        self.layer0.apply(partial(self._stride, stride=1))  # set stride = 1
         current_stride *= 2
         # building bottleneck layers
         for i, setting in enumerate(inverted_residual_setting):
             s = setting[4]
-            inverted_residual_setting[i][4] = 1 # change stride
+            inverted_residual_setting[i][4] = 1  # change stride
             if current_stride == output_stride:
                 rate *= s
                 inverted_residual_setting[i][5] = rate
@@ -1040,7 +1014,7 @@ class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
             self.index4 = index_block(64, use_nonlinear=use_nonlinear, use_context=use_context, batch_norm=BatchNorm2d)
         else:
             raise NotImplementedError
-        
+
         ### context aggregation ###
         if apply_aspp:
             self.dconv_pp = aspp(320, 160, output_stride=output_stride, batch_norm=BatchNorm2d)
@@ -1048,13 +1022,20 @@ class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
             self.dconv_pp = conv_bn(320, 160, 1, 1, BatchNorm2d)
 
         ### decoder ###
-        self.decoder_layer6 = decoder_block(160*2, 96, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer5 = decoder_block(96*2, 64, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer4 = decoder_block(64*2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer3 = decoder_block(32*2, 24, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer2 = decoder_block(24*2, 16, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer1 = decoder_block(16*2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
-        self.decoder_layer0 = decoder_block(32*2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size, batch_norm=BatchNorm2d)
+        self.decoder_layer6 = decoder_block(160 * 2, 96, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer5 = decoder_block(96 * 2, 64, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer4 = decoder_block(64 * 2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer3 = decoder_block(32 * 2, 24, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer2 = decoder_block(24 * 2, 16, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer1 = decoder_block(16 * 2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
+        self.decoder_layer0 = decoder_block(32 * 2, 32, conv_operator=conv_operator, kernel_size=decoder_kernel_size,
+                                            batch_norm=BatchNorm2d)
 
         self.pred = pred(32, 1, conv_operator, k=decoder_kernel_size, batch_norm=BatchNorm2d)
 
@@ -1087,40 +1068,40 @@ class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
 
     def forward(self, x):
         # encode
-        l0 = self.layer0(x)                                 # 4x320x320
+        l0 = self.layer0(x)  # 4x320x320
         idx0_en, idx0_de = self.index0(l0)
         l0 = idx0_en * l0
-        l0p = 4 * F.avg_pool2d(l0, (2, 2), stride=2)        # 32x160x160
+        l0p = 4 * F.avg_pool2d(l0, (2, 2), stride=2)  # 32x160x160
 
-        l1 = self.layer1(l0p)                               # 16x160x160
-        l2 = self.layer2(l1)                                # 24x160x160
+        l1 = self.layer1(l0p)  # 16x160x160
+        l2 = self.layer2(l1)  # 24x160x160
         idx2_en, idx2_de = self.index2(l2)
         l2 = idx2_en * l2
-        l2p = 4 * F.avg_pool2d(l2, (2, 2), stride=2)        # 24x80x80
-        
-        l3 = self.layer3(l2p)                               # 32x80x80       
-        idx3_en, idx3_de = self.index3(l3)  
-        l3 = idx3_en * l3
-        l3p = 4 * F.avg_pool2d(l3, (2, 2), stride=2)        # 32x40x40
+        l2p = 4 * F.avg_pool2d(l2, (2, 2), stride=2)  # 24x80x80
 
-        l4 = self.layer4(l3p)                               # 64x40x40
+        l3 = self.layer3(l2p)  # 32x80x80
+        idx3_en, idx3_de = self.index3(l3)
+        l3 = idx3_en * l3
+        l3p = 4 * F.avg_pool2d(l3, (2, 2), stride=2)  # 32x40x40
+
+        l4 = self.layer4(l3p)  # 64x40x40
         idx4_en, idx4_de = self.index4(l4)
         l4 = idx4_en * l4
-        l4p = 4 * F.avg_pool2d(l4, (2, 2), stride=2)        # 64x20x20
+        l4p = 4 * F.avg_pool2d(l4, (2, 2), stride=2)  # 64x20x20
 
-        l5 = self.layer5(l4p)                               # 96x20x20
-        l6 = self.layer6(l5)                                # 160x20x20
+        l5 = self.layer5(l4p)  # 96x20x20
+        l6 = self.layer6(l5)  # 160x20x20
         if self.output_stride == 32:
             idx6_en, idx6_de = self.index6(l6)
             l6 = idx6_en * l6
-            l6p = 4 * F.avg_pool2d(l6, (2, 2), stride=2)    # 160x10x10
+            l6p = 4 * F.avg_pool2d(l6, (2, 2), stride=2)  # 160x10x10
         elif self.output_stride == 16:
             l6p, idx6_de = l6, None
 
-        l7 = self.layer7(l6p)                               # 320x10x10
+        l7 = self.layer7(l6p)  # 320x10x10
 
         # pyramid pooling
-        l = self.dconv_pp(l7)                               # 160x10x10
+        l = self.dconv_pp(l7)  # 160x10x10
 
         # decode
         l = self.decoder_layer6(l, l6, idx6_de)
@@ -1155,7 +1136,7 @@ class hlMobileNetV2UNetDecoderIndexLearning(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-                
+
 
 def hlmobilenetv2(pretrained=False, decoder='unet_style', **kwargs):
     """Constructs a MobileNet_V2 model.
@@ -1173,7 +1154,7 @@ def hlmobilenetv2(pretrained=False, decoder='unet_style', **kwargs):
         model = hlMobileNetV2RefineNet(**kwargs)
     else:
         raise NotImplementedError
-    
+
     if pretrained:
         corresp_name = CORRESP_NAME
         model_dict = model.state_dict()
@@ -1211,8 +1192,8 @@ if __name__ == "__main__":
 
     net = hlmobilenetv2(
         width_mult=1,
-        pretrained=True, 
-        freeze_bn=True, 
+        pretrained=True,
+        freeze_bn=True,
         sync_bn=False,
         apply_aspp=True,
         output_stride=32,
