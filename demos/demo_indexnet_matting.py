@@ -36,9 +36,10 @@ from PIL import Image
 
 import torch
 import torch.nn as nn
-from torchvision import transforms
-from torch.utils.data import DataLoader
-
+#from torchvision import transforms
+#from torch.utils.data import DataLoader
+import paddle
+from paddle.io import DataLoader
 from hlvggnet import hlvgg16
 from hlmobilenetv2 import hlmobilenetv2
 from hldataset import AdobeImageMattingDataset, Normalize, ToTensor
@@ -91,7 +92,7 @@ testset = dataset(
     data_file=DATA_TEST_LIST,
     data_dir=DATA_DIR,
     train=False,
-    transform=transforms.Compose([
+    transform=paddle.vision.transforms.Compose([
         Normalize(IMG_SCALE, IMG_MEAN, IMG_STD),
         ToTensor()]
     )
@@ -101,14 +102,13 @@ test_loader = DataLoader(
     batch_size=1,
     shuffle=False,
     num_workers=0,
-    pin_memory=False
 )
 
 image_list = [name.split('\t') for name in open(DATA_TEST_LIST).read().splitlines()]
 # switch to eval mode
 net.eval()
 
-with torch.no_grad():
+with paddle.no_grad():
     sad = []
     mse = []
     grad = []
