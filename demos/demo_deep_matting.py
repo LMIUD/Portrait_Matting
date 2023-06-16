@@ -1,44 +1,14 @@
-"""
-IndexNet Matting
 
-Indices Matter: Learning to Index for Deep Image Matting
-IEEE/CVF International Conference on Computer Vision, 2019
-
-This software is strictly limited to academic purposes only
-Copyright (c) 2019, Hao Lu (hao.lu@adelaide.edu.au)
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
 
 import os
 import cv2
 from time import time
 from PIL import Image
-
-import torch
-import torch.nn as nn
-from torchvision import transforms
-from torch.utils.data import DataLoader
-
+import paddle
+#import torch.nn as nn
+#from torchvision import transforms
+#from torch.utils.data import DataLoader
+from paddle.io import DataLoader
 from hlvggnet import hlvgg16
 from hlmobilenetv2 import hlmobilenetv2
 from hldataset import AdobeImageMattingDataset, Normalize, ToTensor
@@ -58,7 +28,7 @@ RESULT_DIR = './results/'+MODEL
 if not os.path.exists(RESULT_DIR):
     os.makedirs(RESULT_DIR)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = paddle.set_device("gpu" if paddle.device.is_compiled_with_cuda() else "cpu")
 
 
 # instantiate network
@@ -66,11 +36,11 @@ net = hlvgg16(pretrained=False)
 net.to(device)
 
 try:
-    checkpoint = torch.load(RESTORE_FROM)
+    checkpoint = paddle.load(RESTORE_FROM)
     pretrained_dict = checkpoint['state_dict']
 except:
     raise Exception('Please download the pretrained model!')
-    
+
 net.load_state_dict(pretrained_dict)
 net.to(device)
 
@@ -79,7 +49,7 @@ testset = dataset(
     data_file=DATA_TEST_LIST,
     data_dir=DATA_DIR,
     train=False,
-    transform=transforms.Compose([
+    transform=paddle.vision.transforms.Compose([
         Normalize(IMG_SCALE, IMG_MEAN, IMG_STD),
         ToTensor()]
     )
@@ -89,14 +59,14 @@ test_loader = DataLoader(
     batch_size=1,
     shuffle=False,
     num_workers=0,
-    pin_memory=False
+    #pin_memory=False
 )
 
 image_list = [name.split('\t') for name in open(DATA_TEST_LIST).read().splitlines()]
 # switch to eval mode
 net.eval()
 
-with torch.no_grad():
+with paddle.no_grad():
     sad = []
     mse = []
     grad = []
@@ -106,8 +76,8 @@ with torch.no_grad():
     for i in range(0, len(test_loader)):
         sample = testset.__getitem__(i)
         image, target = sample['image'], sample['alpha']
-        image = torch.unsqueeze(image, dim=0)
-        target = torch.unsqueeze(target, dim=0)
+        image = paddle.unsqueeze(image, axis=0)
+        target = paddle.unsqueeze(target, axis=0)
 
         h, w = image.size()[2:]
         image = image.squeeze().numpy().transpose(1, 2, 0)
@@ -122,13 +92,14 @@ with torch.no_grad():
         # ----------------------------------------------------------------
 
         image = image_alignment(image, STRIDE, odd=False)
-        inputs = torch.from_numpy(np.expand_dims(image.transpose(2, 0, 1), axis=0))
-        
+        inputs = paddle.to_tensor(np.expand_dims(image.transpose(2, 0, 1), axis=0))
+
         # inference
-        torch.cuda.synchronize()
+        #torch.cuda.synchronize()
         start = time()
         outputs = net(inputs.to(device)).squeeze().cpu().numpy()
-        torch.cuda.synchronize()
+        #torch.cuda.synchronize()
+        print(outputs)
         end = time()
 
         alpha = cv.resize(outputs, dsize=(w,h), interpolation=cv.INTER_CUBIC)
