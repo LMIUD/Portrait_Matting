@@ -7,23 +7,17 @@ import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
 
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-# from torchvision import transforms
-# from torch.utils.data import DataLoader
-# from torch.optim.lr_scheduler import StepLR, MultiStepLR
-
 import paddle
 import paddle.nn as nn
+import paddle.optimizer as optim
 from paddle.vision.transforms import Compose
 from paddle.io import DataLoader
 from paddle.optimizer.lr import MultiStepDecay
 
-from lib.nn import patch_replication_callback
-from hlmobilenetv2 import hlmobilenetv2
-from hlvggnet import hlvgg16
-from hldataset import AdobeImageMattingDataset, RandomCrop, RandomFlip, Normalize, ToTensor
+from models.lib import patch_replication_callback
+from models.mobilenetv2 import mobilenetv2
+from models.vggnet import vgg16
+from datasets.dataset import AdobeImageMattingDataset, RandomCrop, RandomFlip, Normalize, ToTensor
 from utils import *
 
 # prevent dataloader deadlock
@@ -77,8 +71,8 @@ RECORD_EVERY = 20
 device = paddle.device.set_device("gpu:0")
 
 hlbackbone = {
-    'mobilenetv2': hlmobilenetv2,
-    'vgg16': hlvgg16
+    'mobilenetv2': mobilenetv2,
+    'vgg16': vgg16
 }
 
 
@@ -348,7 +342,7 @@ def main():
             pretrained_params.append(p[1])
 
     # define optimizer
-    optimizer = paddle.optimizer.Adam(
+    optimizer = optim.Adam(
         parameters=[
             {'params': learning_params},
             {'params': pretrained_params, 'learning_rate': args.learning_rate / args.mult},
