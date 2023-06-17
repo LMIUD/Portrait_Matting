@@ -37,6 +37,7 @@ from PIL import Image
 from scipy import misc, ndimage
 
 import paddle
+import paddle.io as io
 from paddle.io import Dataset
 from paddle.vision import transforms
 from scipy.ndimage import morphology
@@ -282,7 +283,7 @@ if __name__ == "__main__":
             ToTensor()]
         )
     )
-    datasetloader = paddle.io.DataLoader(
+    datasetloader = io.DataLoader(
         dataset,
         batch_size=1,
         shuffle=True,
