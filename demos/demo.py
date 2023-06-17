@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import paddle
 import paddle.nn as nn
-from hlmobilenetv2 import hlmobilenetv2
+from models.mobilenetv2 import mobilenetv2
 
 # ignore warnings
 import warnings
@@ -28,7 +28,7 @@ if not os.path.exists(RESULT_DIR):
     os.makedirs(RESULT_DIR)
 
 # load pretrained model
-net = hlmobilenetv2(
+net = mobilenetv2(
     pretrained=False,
     freeze_bn=True,
     output_stride=STRIDE,
