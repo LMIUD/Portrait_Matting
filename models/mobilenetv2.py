@@ -7,6 +7,8 @@ from functools import partial
 # import torch
 # import torch.nn as nn
 # import torch.nn.functional as F
+import paddle
+import paddle.nn as nn
 
 from hlaspp import ASPP
 from lib.nn import SynchronizedBatchNorm2d
