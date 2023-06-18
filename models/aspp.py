@@ -1,11 +1,8 @@
 import math
-#import torch
-#import torch.nn as nn
-#import torch.nn.functional as F
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-# from lib.nn import SynchronizedBatchNorm2d
+from lib.modules import SynchronizedBatchNorm2d
 
 
 def depth_sep_dilated_conv_3x3_bn(inp, oup, padding, dilation, BatchNorm2d):
@@ -25,7 +22,7 @@ def dilated_conv_3x3_bn(inp, oup, padding, dilation, BatchNorm2d):
         nn.ReLU6(inplace=True)
     )
 
-class _ASPPModule(nn.Module):
+class _ASPPModule(nn.Layer):
     def __init__(self, inp, planes, kernel_size, padding, dilation, batch_norm):
         super(_ASPPModule, self).__init__()
         BatchNorm2d = batch_norm
@@ -46,20 +43,20 @@ class _ASPPModule(nn.Module):
         return x
 
     def _init_weight(self):
-        for m in self.modules():
+        for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
                 initializer = nn.initializer.KaimingNormal_()
                 initializer(m.weight, m.weight.block)
-            # elif isinstance(m, SynchronizedBatchNorm2d):
-            #     nn.initializer.Constant(1)(m.weight)
-            #     nn.initializer.Constant(0)(m.bias)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                nn.initializer.Constant(1)(m.weight)
+                nn.initializer.Constant(0)(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
                 nn.initializer.Constant(1)(m.weight)
                 nn.initializer.Constant(0)(m.bias)
 
 
-class ASPP(nn.Module):
-    def __init__(self, inp, oup, output_stride=32, batch_norm=nn.BatchNorm2D, width_mult=1.):
+class ASPP(nn.Layer):
+    def __init__(self, inp, oup, output_stride=32, batch_norm=SynchronizedBatchNorm2d, width_mult=1.):
         super(ASPP, self).__init__()
 
         if output_stride == 32:
@@ -109,13 +106,13 @@ class ASPP(nn.Module):
         return self.dropout(x)
 
     def _init_weight(self):
-        for m in self.modules():
+        for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
                 initializer = nn.initializer.KaimingNormal()
                 initializer(m.weight, m.weight.block)
-            # elif isinstance(m, SynchronizedBatchNorm2d):
-            #     nn.initializer.Constant(1)(m.weight)
-            #     nn.initializer.Constant(0)(m.bias)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                nn.initializer.Constant(1)(m.weight)
+                nn.initializer.Constant(0)(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
                 nn.initializer.Constant(1)(m.weight)
                 nn.initializer.Constant(0)(m.bias)
