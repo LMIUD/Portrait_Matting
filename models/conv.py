@@ -1,17 +1,14 @@
-#import torch
-#import torch.nn as nn
-import paddle
 import paddle.nn as nn
-#from lib.nn import SynchronizedBatchNorm2d
+from lib.modules import SynchronizedBatchNorm2d
 
-def conv_bn(inp, oup, k=3, s=1, BatchNorm2d=nn.BatchNorm2D):
+def conv_bn(inp, oup, k=3, s=1, BatchNorm2d=SynchronizedBatchNorm2d):
     return nn.Sequential(
         nn.Conv2d(inp, oup, k, s, padding=k//2, bias=False),
         BatchNorm2d(oup),
         nn.ReLU6(inplace=True)
     )    
 
-def dep_sep_conv_bn(inp, oup, k=3, s=1, BatchNorm2d=nn.BatchNorm2D):
+def dep_sep_conv_bn(inp, oup, k=3, s=1, BatchNorm2d=SynchronizedBatchNorm2d):
     return nn.Sequential(
         nn.Conv2d(inp, inp, k, s, padding=k//2, groups=inp, bias=False),
         BatchNorm2d(inp),
