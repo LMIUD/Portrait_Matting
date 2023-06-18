@@ -10,11 +10,11 @@ from functools import partial
 import paddle
 import paddle.nn as nn
 
-from hlaspp import ASPP
+from aspp import ASPP
 from lib.nn import SynchronizedBatchNorm2d
-from hlindex import HolisticIndexBlock, DepthwiseO2OIndexBlock, DepthwiseM2OIndexBlock
-from hldecoder import *
-from hlconv import *
+from index import HolisticIndexBlock, DepthwiseO2OIndexBlock, DepthwiseM2OIndexBlock
+from decoder import *
+from conv import *
 from modelsummary import get_model_summary
 
 try:
