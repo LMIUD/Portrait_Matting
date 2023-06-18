@@ -1,5 +1,3 @@
-
-
 import os
 import cv2
 from time import time
@@ -11,9 +9,9 @@ import torch.nn as nn
 #from torch.utils.data import DataLoader
 import paddle
 from paddle.io import DataLoader
-from vggnet import vgg16
-from mobilenetv2 import mobilenetv2
-from dataset import AdobeImageMattingDataset, Normalize, ToTensor
+from models.vggnet import vgg16
+from models.mobilenetv2 import mobilenetv2
+from datasets.dataset import AdobeImageMattingDataset, Normalize, ToTensor
 from utils import *
 
 IMG_SCALE = 1./255
@@ -33,7 +31,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 # instantiate network
-net = hlmobilenetv2(
+net = mobilenetv2(
         pretrained=False,
         freeze_bn=True, 
         output_stride=STRIDE,

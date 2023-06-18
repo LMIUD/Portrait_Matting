@@ -1,5 +1,3 @@
-
-
 import os
 import cv2
 from time import time
@@ -9,9 +7,9 @@ import paddle
 #from torchvision import transforms
 #from torch.utils.data import DataLoader
 from paddle.io import DataLoader
-from vggnet import vgg16
-from mobilenetv2 import mobilenetv2
-from dataset import AdobeImageMattingDataset, Normalize, ToTensor
+from models.vggnet import vgg16
+from models.mobilenetv2 import mobilenetv2
+from datasets.dataset import AdobeImageMattingDataset, Normalize, ToTensor
 from utils import *
 
 IMG_SCALE = 1./255
@@ -32,7 +30,7 @@ device = paddle.set_device("gpu" if paddle.device.is_compiled_with_cuda() else "
 
 
 # instantiate network
-net = hlvgg16(pretrained=False)
+net = vgg16(pretrained=False)
 net.to(device)
 
 try:
