@@ -1,6 +1,115 @@
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
+from mobilenetv2 import load_url
+
+MODEL_URLS = {
+    'vgg16_bn': 'https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
+}
+
+CORRESP_NAME = {
+    # conv1
+    "features.0.weight": "conv11.weight",
+    "features.0.bias": "conv11.bias",
+    "features.1.weight": "bn11.weight",
+    "features.1.bias": "bn11.bias",
+    "features.1.running_mean": "bn11.running_mean",
+    "features.1.running_var": "bn11.running_var",
+
+    "features.3.weight": "conv12.weight",
+    "features.3.bias": "conv12.bias",
+    "features.4.weight": "bn12.weight",
+    "features.4.bias": "bn12.bias",
+    "features.4.running_mean": "bn12.running_mean",
+    "features.4.running_var": "bn12.running_var",
+    # conv2
+    "features.7.weight": "conv21.weight",
+    "features.7.bias": "conv21.bias",
+    "features.8.weight": "bn21.weight",
+    "features.8.bias": "bn21.bias",
+    "features.8.running_mean": "bn21.running_mean",
+    "features.8.running_var": "bn21.running_var",
+
+    "features.10.weight": "conv22.weight",
+    "features.10.bias": "conv22.bias",
+    "features.11.weight": "bn22.weight",
+    "features.11.bias": "bn22.bias",
+    "features.11.running_mean": "bn22.running_mean",
+    "features.11.running_var": "bn22.running_var",
+    # conv3
+    "features.14.weight": "conv31.weight",
+    "features.14.bias": "conv31.bias",
+    "features.15.weight": "bn31.weight",
+    "features.15.bias": "bn31.bias",
+    "features.15.running_mean": "bn31.running_mean",
+    "features.15.running_var": "bn31.running_var",
+
+    "features.17.weight": "conv32.weight",
+    "features.17.bias": "conv32.bias",
+    "features.18.weight": "bn32.weight",
+    "features.18.bias": "bn32.bias",
+    "features.18.running_mean": "bn32.running_mean",
+    "features.18.running_var": "bn32.running_var",
+
+    "features.20.weight": "conv33.weight",
+    "features.20.bias": "conv33.bias",
+    "features.21.weight": "bn33.weight",
+    "features.21.bias": "bn33.bias",
+    "features.21.running_mean": "bn33.running_mean",
+    "features.21.running_var": "bn33.running_var",
+    # conv4
+    "features.24.weight": "conv41.weight",
+    "features.24.bias": "conv41.bias",
+    "features.25.weight": "bn41.weight",
+    "features.25.bias": "bn41.bias",
+    "features.25.running_mean": "bn41.running_mean",
+    "features.25.running_var": "bn41.running_var",
+
+    "features.27.weight": "conv42.weight",
+    "features.27.bias": "conv42.bias",
+    "features.28.weight": "bn42.weight",
+    "features.28.bias": "bn42.bias",
+    "features.28.running_mean": "bn42.running_mean",
+    "features.28.running_var": "bn42.running_var",
+
+    "features.30.weight": "conv43.weight",
+    "features.30.bias": "conv43.bias",
+    "features.31.weight": "bn43.weight",
+    "features.31.bias": "bn43.bias",
+    "features.31.running_mean": "bn43.running_mean",
+    "features.31.running_var": "bn43.running_var",
+
+    # conv5
+    "features.34.weight": "conv51.weight",
+    "features.34.bias": "conv51.bias",
+    "features.35.weight": "bn51.weight",
+    "features.35.bias": "bn51.bias",
+    "features.35.running_mean": "bn51.running_mean",
+    "features.35.running_var": "bn51.running_var",
+
+    "features.37.weight": "conv52.weight",
+    "features.37.bias": "conv52.bias",
+    "features.38.weight": "bn52.weight",
+    "features.38.bias": "bn52.bias",
+    "features.38.running_mean": "bn52.running_mean",
+    "features.38.running_var": "bn52.running_var",
+
+    "features.40.weight": "conv53.weight",
+    "features.40.bias": "conv53.bias",
+    "features.41.weight": "bn53.weight",
+    "features.41.bias": "bn53.bias",
+    "features.41.running_mean": "bn53.running_mean",
+    "features.41.running_var": "bn53.running_var",
+    # fc6
+    "classifier.0.weight": "conv6.weight",
+    "classifier.0.bias": "conv6.bias",
+    # # fc7
+    # "classifier.3.weight": "conv7.weight",
+    # "classifier.3.bias": "conv7.bias",
+    # # classifier
+    # "classifier.6.weight": "classifier.weight",
+    # "classifier.6.bias": "classifier.bias"
+}
 
 class DeepMatting(nn.Layer):
     def __init__(self, input_chn, output_chn, use_pretrained=True):
@@ -136,8 +245,30 @@ class DeepMatting(nn.Layer):
 def vgg16(pretrained=False, **kwargs):
     """Constructs a VGG-16 model.
 
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = DeepMatting(input_chn=4, output_chn=1, use_pretrained=pretrained)
+
+    if pretrained:
+        corresp_name = CORRESP_NAME
+        # load the state dict of pretrained model
+        pretrained_dict = load_url(MODEL_URLS['vgg16_bn'])
+        model_dict = model.state_dict()
+        for name in pretrained_dict:
+            if name not in corresp_name:
+                continue
+            if name == "features.0.weight":
+                model_weight = model_dict[corresp_name[name]]
+                assert(model_weight.shape[1] == 4)
+                model_weight[:, 0:3, :, :] = pretrained_dict[name]
+                model_weight[:, 3, :, :] = paddle.to_tensor(0)
+                model_dict[corresp_name[name]] = model_weight
+            elif name == "classifier.0.weight":
+                model_dict[corresp_name[name]] = pretrained_dict[name].view(4096, 512, 7, 7)
+            else:
+                model_dict[corresp_name[name]] = pretrained_dict[name]
+        model.load_state_dict(model_dict)
     return model
 
 
