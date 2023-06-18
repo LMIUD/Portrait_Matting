@@ -4,7 +4,7 @@ import paddle.nn.functional as F
 from mobilenetv2 import load_url
 
 MODEL_URLS = {
-    'vgg16_bn': 'https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
+    'vgg16_bn': 'https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/VGG16_pretrained.pdparams',
 }
 
 CORRESP_NAME = {
@@ -270,12 +270,12 @@ def vgg16(pretrained=False, **kwargs):
                 model_dict[corresp_name[name]] = pretrained_dict[name].view(4096, 512, 7, 7)
             else:
                 model_dict[corresp_name[name]] = pretrained_dict[name]
-        model.load_state_dict(model_dict)
+        model.set_state_dict(model_dict)
     return model
 
 
 if __name__ == "__main__":
-    net = DeepMatting(input_chn=4, output_chn=1, use_pretrained=True)
+    net = vgg16(True)
     net.eval()
     #net.cuda()
 
