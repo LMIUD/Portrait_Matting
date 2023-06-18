@@ -3,18 +3,15 @@ import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
 
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-# from lib.nn import SynchronizedBatchNorm2d
+from lib.modules import SynchronizedBatchNorm2d
 
 from conv import conv
 
 class DeepLabDecoder(nn.Layer):
-    def __init__(self, conv_operator='std_conv', kernel_size=5, batch_norm=nn.BatchNorm2D):
+    def __init__(self, conv_operator='std_conv', kernel_size=5, batch_norm=SynchronizedBatchNorm2d):
         super(DeepLabDecoder, self).__init__()
         Conv2d = conv[conv_operator]
         BatchNorm2d = batch_norm
@@ -44,17 +41,17 @@ class DeepLabDecoder(nn.Layer):
             if isinstance(m, nn.Conv2D):
                 initializer = nn.initializer.KaimingNormal()
                 initializer(m.weight, m.weight.block)
-            # elif isinstance(m, SynchronizedBatchNorm2d):
-            #     m.weight.data.fill_(1)
-            #     m.bias.data.zero_()
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2D):
                 nn.initializer.constant(1)(m.weight)
                 nn.initializer.constant(0)(m.bias)
 
 
 # max-pooling indices-guided decoding
-class IndexedDecoder(nn.Module):
-    def __init__(self, inp, oup, conv_operator='std_conv', kernel_size=5, batch_norm=nn.BatchNorm2D):
+class IndexedDecoder(nn.Layer):
+    def __init__(self, inp, oup, conv_operator='std_conv', kernel_size=5, batch_norm=SynchronizedBatchNorm2d):
         super(IndexedDecoder, self).__init__()
         Conv2d = conv[conv_operator]
         BatchNorm2d = batch_norm
@@ -71,13 +68,13 @@ class IndexedDecoder(nn.Module):
         return self.dconv(l_encode)
 
     def _init_weight(self):
-        for m in self.modules():
+        for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
                 initializer = nn.initializer.KaimingNormal()
                 initializer(m.weight, m.weight.block)
-            # elif isinstance(m, SynchronizedBatchNorm2d):
-            #     m.weight.data.fill_(1)
-            #     m.bias.data.zero_()
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2D):
                 nn.initializer.constant(1)(m.weight)
                 nn.initializer.constant(0)(m.bias)
@@ -93,7 +90,7 @@ class IndexedDecoder(nn.Module):
 
 
 class IndexedUpsamlping(nn.Layer):
-    def __init__(self, inp, oup, conv_operator='std_conv', kernel_size=5, batch_norm=nn.BatchNorm2D):
+    def __init__(self, inp, oup, conv_operator='std_conv', kernel_size=5, batch_norm=SynchronizedBatchNorm2d):
         super(IndexedUpsamlping, self).__init__()
         self.oup = oup
 
@@ -113,13 +110,13 @@ class IndexedUpsamlping(nn.Layer):
         return self.dconv(l_cat)
 
     def _init_weight(self):
-        for m in self.modules():
+        for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
                 initializer = nn.initializer.KaimingNormal()
                 initializer(m.weight, m.weight.block)
-            # elif isinstance(m, SynchronizedBatchNorm2d):
-            #     m.weight.data.fill_(1)
-            #     m.bias.data.zero_()
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2D):
                 nn.initializer.Constant(1)(m.weight)
                 nn.initializer.Constant(0)(m.bias)
