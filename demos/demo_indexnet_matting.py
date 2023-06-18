@@ -11,9 +11,9 @@ import torch.nn as nn
 #from torch.utils.data import DataLoader
 import paddle
 from paddle.io import DataLoader
-from hlvggnet import hlvgg16
-from hlmobilenetv2 import hlmobilenetv2
-from hldataset import AdobeImageMattingDataset, Normalize, ToTensor
+from vggnet import vgg16
+from mobilenetv2 import mobilenetv2
+from dataset import AdobeImageMattingDataset, Normalize, ToTensor
 from utils import *
 
 IMG_SCALE = 1./255
