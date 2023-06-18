@@ -4,9 +4,9 @@ import math
 from time import time
 from functools import partial
 
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
+#import torch
+#import torch.nn as nn
+#import torch.nn.functional as F
 import paddle
 import paddle.nn as nn
 
@@ -305,9 +305,9 @@ CORRESP_NAME = {
 
 def pred(inp, oup, conv_operator, k, batch_norm):
     # the last 1x1 convolutional layer is very important
-    hlConv2d = hlconv[conv_operator]
+    Conv2d = conv[conv_operator]
     return nn.Sequential(
-        hlConv2d(inp, oup, k, 1, batch_norm),
+        Conv2d(inp, oup, k, 1, batch_norm),
         nn.Conv2d(oup, oup, k, 1, padding=k // 2, bias=False)
     )
 
@@ -1170,7 +1170,7 @@ def hlmobilenetv2(pretrained=False, decoder='unet_style', **kwargs):
                 model_weight = model_dict[corresp_name[name]]
                 assert model_weight.shape[1] == 4
                 model_weight[:, 0:3, :, :] = pretrained_dict[name]
-                model_weight[:, 3, :, :] = torch.tensor(0)
+                model_weight[:, 3, :, :] = paddle.to_tensor(0)
                 model_dict[corresp_name[name]] = model_weight
             else:
                 model_dict[corresp_name[name]] = pretrained_dict[name]
@@ -1186,7 +1186,8 @@ def load_url(url, model_dir='./pretrained', map_location=None):
     if not os.path.exists(cached_file):
         sys.stderr.write('Downloading: "{}" to {}\n'.format(url, cached_file))
         urlretrieve(url, cached_file)
-    return torch.load(cached_file, map_location=map_location)
+#    return torch.load(cached_file, map_location=map_location)
+    return paddle.load(cached_file)
 
 
 if __name__ == "__main__":
@@ -1210,16 +1211,19 @@ if __name__ == "__main__":
     net.eval()
     net.cuda()
 
-    dump_x = torch.randn(1, 4, 224, 224).cuda()
+#    dump_x = torch.randn(1, 4, 224, 224).cuda()
+    dump_x = paddle.randn(1, 224, 224).cuda()
     print(get_model_summary(net, dump_x))
 
     frame_rate = np.zeros((10, 1))
     for i in range(10):
-        x = torch.randn(1, 4, 320, 320).cuda()
-        torch.cuda.synchronize()
+#        x = torch.randn(1, 4, 320, 320).cuda()
+        x = paddle.randn(1, 4, 320).cuda()
+#        torch.cuda.synchronize()
         start = time()
         y = net(x)
-        torch.cuda.synchronize()
+        print(y)
+#       torch.cuda.synchronize()
         end = time()
         running_frame_rate = 1 * float(1 / (end - start))
         frame_rate[i] = running_frame_rate
