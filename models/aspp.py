@@ -45,7 +45,7 @@ class _ASPPModule(nn.Layer):
     def _init_weight(self):
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal_()
+                initializer = nn.initializer.KaimingNormal()
                 initializer(m.weight, m.weight.block)
             elif isinstance(m, SynchronizedBatchNorm2d):
                 nn.initializer.Constant(1)(m.weight)
