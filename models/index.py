@@ -1,11 +1,8 @@
-#import torch
-#import torch.nn as nn
-#import torch.nn.functional as F
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
-class HolisticIndexBlock(nn.Module):
+class HolisticIndexBlock(nn.Layer):
     def __init__(self, inp, use_nonlinear=False, use_context=False, batch_norm=None):
         super(HolisticIndexBlock, self).__init__()
 
@@ -38,7 +35,7 @@ class HolisticIndexBlock(nn.Module):
         return idx_en, idx_de
 
 
-class DepthwiseO2OIndexBlock(nn.Module):
+class DepthwiseO2OIndexBlock(nn.Layer):
     def __init__(self, inp, use_nonlinear=False, use_context=False, batch_norm=nn.BatchNorm2D):
         super(DepthwiseO2OIndexBlock, self).__init__()
 
@@ -88,7 +85,7 @@ class DepthwiseO2OIndexBlock(nn.Module):
         return idx_en, idx_de
 
 
-class DepthwiseM2OIndexBlock(nn.Module):
+class DepthwiseM2OIndexBlock(nn.Layer):
     def __init__(self, inp, use_nonlinear=False, use_context=False, batch_norm=nn.BatchNorm2D):
         super(DepthwiseM2OIndexBlock, self).__init__()
         self.use_nonlinear = use_nonlinear
