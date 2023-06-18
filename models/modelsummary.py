@@ -77,10 +77,10 @@ def get_model_summary(model, *input_tensors, item_length=26, verbose=False):
                     multiply_adds=flops)
             )
 
-        if not isinstance(module, nn.ModuleList) \
+        if not isinstance(module, nn.LayerList) \
            and not isinstance(module, nn.Sequential) \
            and module != model:
-            hooks.append(module.register_forward_hook(hook))
+            hooks.append(module.register_forward_pre_hook(hook))
 
     model.eval()
     model.apply(add_hooks)
