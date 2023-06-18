@@ -17,7 +17,7 @@ class HolisticIndexBlock(nn.Layer):
             self.indexnet = nn.Sequential(
                 nn.Conv2D(inp, 2*inp, kernel_size=kernel_size, stride=2, padding=padding, bias_attr=False),
                 BatchNorm2d(2*inp),
-                nn.ReLU6(inplace=True),
+                nn.ReLU6(),
                 nn.Conv2D(2*inp, 4, kernel_size=1, stride=1, padding=0, bias_attr=False)
             )
         else:
@@ -55,7 +55,7 @@ class DepthwiseO2OIndexBlock(nn.Layer):
             return nn.Sequential(
                 nn.Conv2D(inp, inp, kernel_size=kernel_size, stride=2, padding=padding, groups=inp, bias_attr=False),
                 BatchNorm2d(inp),
-                nn.ReLU6(inplace=True),
+                nn.ReLU6(),
                 nn.Conv2D(inp, inp, kernel_size=1, stride=1, padding=0, groups=inp, bias_attr=False)
             )
         else:
@@ -106,7 +106,7 @@ class DepthwiseM2OIndexBlock(nn.Layer):
             return nn.Sequential(
                 nn.Conv2D(inp, inp, kernel_size=kernel_size, stride=2, padding=padding, bias_attr=False),
                 BatchNorm2d(inp),
-                nn.ReLU6(inplace=True),
+                nn.ReLU6(),
                 nn.Conv2D(inp, inp, kernel_size=1, stride=1, padding=0, bias_attr=False)
             )
         else:

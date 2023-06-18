@@ -9,17 +9,17 @@ def depth_sep_dilated_conv_3x3_bn(inp, oup, padding, dilation, BatchNorm2d):
     return nn.Sequential(
         nn.Conv2D(inp, inp, 3, 1, padding=padding, dilation=dilation, groups=inp, bias_attr=False),
         BatchNorm2d(inp),
-        nn.ReLU6(inplace=True),
+        nn.ReLU6(),
         nn.Conv2D(inp, oup, 1, 1, padding=0, bias_attr=False),
         BatchNorm2d(oup),
-        nn.ReLU6(inplace=True)
+        nn.ReLU6()
     )
 
 def dilated_conv_3x3_bn(inp, oup, padding, dilation, BatchNorm2d):
     return nn.Sequential(
         nn.Conv2D(inp, oup, 3, 1, padding=padding, dilation=dilation, bias_attr=False),
         BatchNorm2d(oup),
-        nn.ReLU6(inplace=True)
+        nn.ReLU6()
     )
 
 class _ASPPModule(nn.Layer):
@@ -30,7 +30,7 @@ class _ASPPModule(nn.Layer):
             self.atrous_conv = nn.Sequential(
                 nn.Conv2D(inp, planes, kernel_size=1, stride=1, padding=padding, dilation=dilation, bias_attr=False),
                 BatchNorm2d(planes),
-                nn.ReLU6(inplace=True)
+                nn.ReLU6()
             )
         elif kernel_size == 3:
             # we use depth-wise separable convolution to save the number of parameters
@@ -79,13 +79,13 @@ class ASPP(nn.Layer):
             nn.AdaptiveAvgPool2D((1, 1)),
             nn.Conv2D(inp, int(256*width_mult), 1, stride=1, padding=0, bias_attr=False),
             BatchNorm2d(int(256*width_mult)),
-            nn.ReLU6(inplace=True)
+            nn.ReLU6()
         )
 
         self.bottleneck_conv = nn.Sequential(
             nn.Conv2D(int(256*width_mult)*5, oup, 1, stride=1, padding=0, bias_attr=False),
             BatchNorm2d(oup),
-            nn.ReLU6(inplace=True)
+            nn.ReLU6()
         )
         
         self.dropout = nn.Dropout(0.5)
