@@ -37,16 +37,18 @@ class DeepLabDecoder(nn.Layer):
         return l
 
     def _init_weight(self):
-        for m in self.sunlayers():
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
+        for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal()
-                initializer(m.weight, m.weight.block)
+                initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
+                initlizer(m.weight)
             elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.constant(1)(m.weight)
-                nn.initializer.constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
 
 
 # max-pooling indices-guided decoding
@@ -68,16 +70,18 @@ class IndexedDecoder(nn.Layer):
         return self.dconv(l_encode)
 
     def _init_weight(self):
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal()
-                initializer(m.weight, m.weight.block)
+                initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
+                initlizer(m.weight)
             elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.constant(1)(m.weight)
-                nn.initializer.constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
     
     def visualize(self, x, indices=None):
         l = self.upsample(x, indices) if indices is not None else x
@@ -110,16 +114,18 @@ class IndexedUpsamlping(nn.Layer):
         return self.dconv(l_cat)
 
     def _init_weight(self):
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal()
-                initializer(m.weight, m.weight.block)
+                initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
+                initlizer(m.weight)
             elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
     
     def visualize(self, x, indices=None):
         l = self.upsample(x, indices) if indices is not None else x

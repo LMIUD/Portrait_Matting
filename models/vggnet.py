@@ -228,13 +228,15 @@ class DeepMatting(nn.Layer):
         return xpred
 
     def weights_init_random(self):
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
                 initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
                 initlizer(m.weight)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
 
     def freeze_bn(self):
         for m in self.sublayers():

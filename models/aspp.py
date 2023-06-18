@@ -43,16 +43,18 @@ class _ASPPModule(nn.Layer):
         return x
 
     def _init_weight(self):
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal()
-                initializer(m.weight, m.weight.block)
+                initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
+                initlizer(m.weight)
             elif isinstance(m, SynchronizedBatchNorm2d):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
 
 
 class ASPP(nn.Layer):
@@ -106,13 +108,15 @@ class ASPP(nn.Layer):
         return self.dropout(x)
 
     def _init_weight(self):
+        initlizer_1 = nn.initializer.Constant(1)
+        initlizer_0 = nn.initializer.Constant(0)
         for m in self.sublayers():
             if isinstance(m, nn.Conv2D):
-                initializer = nn.initializer.KaimingNormal()
-                initializer(m.weight, m.weight.block)
+                initlizer = nn.initializer.KaimingUniform(None, 0, 'relu')
+                initlizer(m.weight)
             elif isinstance(m, SynchronizedBatchNorm2d):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
             elif isinstance(m, nn.BatchNorm2D):
-                nn.initializer.Constant(1)(m.weight)
-                nn.initializer.Constant(0)(m.bias)
+                initlizer_1(m.weight)
+                initlizer_0(m.bias)
