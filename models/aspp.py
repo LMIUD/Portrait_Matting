@@ -100,7 +100,7 @@ class ASPP(nn.Layer):
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
         x5 = self.global_avg_pool(x)
-        x5 = F.interpolate(x5, size=x4.size()[2:], mode='nearest')
+        x5 = F.interpolate(x5, size=x4.shape[2:], mode='nearest')
         x = paddle.concat((x1, x2, x3, x4, x5), axis=1)
 
         x = self.bottleneck_conv(x)

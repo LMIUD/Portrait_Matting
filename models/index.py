@@ -64,7 +64,7 @@ class DepthwiseO2OIndexBlock(nn.Layer):
             )
         
     def forward(self, x):
-        bs, c, h, w = x.size()
+        bs, c, h, w = x.shape
 
         x1 = self.indexnet1(x).unsqueeze(2)
         x2 = self.indexnet2(x).unsqueeze(2)
@@ -115,7 +115,7 @@ class DepthwiseM2OIndexBlock(nn.Layer):
             )
         
     def forward(self, x):
-        bs, c, h, w = x.size()
+        bs, c, h, w = x.shape
 
         x1 = self.indexnet1(x).unsqueeze(2)
         x2 = self.indexnet2(x).unsqueeze(2)

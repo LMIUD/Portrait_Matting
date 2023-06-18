@@ -31,7 +31,7 @@ class DeepLabDecoder(nn.Layer):
 
     def forward(self, l, l_low):
         l_low = self.first_dconv(l_low)
-        l = F.interpolate(l, size=l_low.size()[2:], mode='bilinear', align_corners=True)
+        l = F.interpolate(l, size=l_low.shape[2:], mode='bilinear', align_corners=True)
         l = paddle.concat((l, l_low), axis=1)
         l = self.last_dconv(l)
         return l
@@ -107,9 +107,9 @@ class IndexedUpsamlping(nn.Layer):
         self._init_weight()
 
     def forward(self, l_encode, l_low, indices=None):
-        _, c, _, _ = l_encode.size()
+        _, c, _, _ = l_encode.shape
         if indices is not None:
-            l_encode = indices * F.interpolate(l_encode, size=l_low.size()[2:], mode='nearest')
+            l_encode = indices * F.interpolate(l_encode, size=l_low.shape[2:], mode='nearest')
         l_cat = paddle.concat((l_encode, l_low), axis=1)
         return self.dconv(l_cat)
 
