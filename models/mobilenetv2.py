@@ -1173,7 +1173,7 @@ def mobilenetv2(pretrained=False, decoder='unet_style', **kwargs):
     return model
 
 
-def load_url(url, model_dir='Portrait-Matting/models/pretrained', map_location=None):
+def load_url(url, model_dir='./models/pretrained', map_location=None):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
     filename = url.split('/')[-1]
