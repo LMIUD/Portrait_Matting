@@ -1,4 +1,3 @@
-
 import os
 
 num_bgs_train = 100

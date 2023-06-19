@@ -1,5 +1,5 @@
 import paddle.nn as nn
-from lib.modules import SynchronizedBatchNorm2d
+from models.lib.modules import SynchronizedBatchNorm2d
 
 def conv_bn(inp, oup, k=3, s=1, BatchNorm2d=SynchronizedBatchNorm2d):
     return nn.Sequential(

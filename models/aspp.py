@@ -1,8 +1,7 @@
-import math
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from lib.modules import SynchronizedBatchNorm2d
+from models.lib.modules import SynchronizedBatchNorm2d
 
 
 def depth_sep_dilated_conv_3x3_bn(inp, oup, padding, dilation, BatchNorm2d):

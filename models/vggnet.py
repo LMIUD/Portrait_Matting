@@ -1,7 +1,7 @@
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from mobilenetv2 import load_url
+from models.mobilenetv2 import load_url
 
 MODEL_URLS = {
     'vgg16_bn': 'https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/VGG16_pretrained.pdparams',

@@ -3,9 +3,9 @@ from matplotlib import pyplot as plt
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from lib.modules import SynchronizedBatchNorm2d
+from models.lib.modules import SynchronizedBatchNorm2d
 
-from conv import conv
+from models.conv import conv
 
 class DeepLabDecoder(nn.Layer):
     def __init__(self, conv_operator='std_conv', kernel_size=5, batch_norm=SynchronizedBatchNorm2d):

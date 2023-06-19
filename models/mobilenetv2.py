@@ -7,11 +7,11 @@ from functools import partial
 import paddle
 import paddle.nn as nn
 
-from aspp import ASPP
-from lib.modules import SynchronizedBatchNorm2d
-from index import HolisticIndexBlock, DepthwiseO2OIndexBlock, DepthwiseM2OIndexBlock
-from decoder import *
-from conv import *
+from models.aspp import ASPP
+from models.lib.modules import SynchronizedBatchNorm2d
+from models.index import HolisticIndexBlock, DepthwiseO2OIndexBlock, DepthwiseM2OIndexBlock
+from models.decoder import *
+from models.conv import *
 
 try:
     from urllib import urlretrieve
