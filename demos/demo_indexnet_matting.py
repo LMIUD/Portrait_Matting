@@ -3,11 +3,8 @@ import cv2
 from time import time
 from PIL import Image
 
-import torch
-import torch.nn as nn
-#from torchvision import transforms
-#from torch.utils.data import DataLoader
 import paddle
+import paddle.nn as nn
 from paddle.io import DataLoader
 from models.vggnet import vgg16
 from models.mobilenetv2 import mobilenetv2
@@ -27,7 +24,7 @@ RESULT_DIR = './results/indexnet_matting'
 if not os.path.exists(RESULT_DIR):
     os.makedirs(RESULT_DIR)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = paddle.device("cuda:0" if paddle.cuda.is_available() else "cpu")
 
 
 # instantiate network
@@ -48,7 +45,7 @@ net = nn.DataParallel(net)
 net.to(device)
 
 try:
-    checkpoint = torch.load(RESTORE_FROM)
+    checkpoint = paddle.load(RESTORE_FROM)
     pretrained_dict = checkpoint['state_dict']
 except:
     raise Exception('Please download the pretrained model!')
@@ -90,13 +87,13 @@ with paddle.no_grad():
         h, w = image.size()[2:]
         image = image.squeeze().numpy().transpose(1, 2, 0)
         image = image_alignment(image, STRIDE, odd=False)
-        inputs = torch.from_numpy(np.expand_dims(image.transpose(2, 0, 1), axis=0))
+        inputs = paddle.from_numpy(np.expand_dims(image.transpose(2, 0, 1), axis=0))
         
         # inference
-        torch.cuda.synchronize()
+        paddle.cuda.synchronize()
         start = time()
         outputs = net(inputs.cuda()).squeeze().cpu().numpy()
-        torch.cuda.synchronize()
+        paddle.cuda.synchronize()
         end = time()
 
         alpha = cv.resize(outputs, dsize=(w,h), interpolation=cv.INTER_CUBIC)

@@ -12,7 +12,6 @@ from lib.modules import SynchronizedBatchNorm2d
 from index import HolisticIndexBlock, DepthwiseO2OIndexBlock, DepthwiseM2OIndexBlock
 from decoder import *
 from conv import *
-from modelsummary import get_model_summary
 
 try:
     from urllib import urlretrieve
@@ -880,8 +879,6 @@ class MobileNetV2UNetDecoder(nn.Layer):
         l = self.dconv_pp(l7)  # 160x10x10
 
         # decode
-        print(self.layer0)
-        print('x.shape={},l0.shape={},l1.shape={},l2.shape={},l3.shape={},l4.shape={},l5.shape={},l6.shape={},l7.shape={},l.shape={}'.format(x.shape, l0.shape, l1.shape, l2.shape, l3.shape, l4.shape, l5.shape, l6.shape, l7.shape, l.shape))
         l = self.decoder_layer6(l, l6, idx6)
         l = self.decoder_layer5(l, l5)
         l = self.decoder_layer4(l, l4, idx4)
@@ -1181,7 +1178,6 @@ def load_url(url, model_dir='Portrait-Matting/models/pretrained', map_location=N
         os.makedirs(model_dir)
     filename = url.split('/')[-1]
     cached_file = os.path.join(model_dir, filename)
-    print(cached_file)
     if not os.path.exists(cached_file):
         sys.stderr.write('Downloading: "{}" to {}\n'.format(url, cached_file))
         urlretrieve(url, cached_file)

@@ -3,9 +3,6 @@ import cv2
 from time import time
 from PIL import Image
 import paddle
-#import torch.nn as nn
-#from torchvision import transforms
-#from torch.utils.data import DataLoader
 from paddle.io import DataLoader
 from models.vggnet import vgg16
 from models.mobilenetv2 import mobilenetv2
