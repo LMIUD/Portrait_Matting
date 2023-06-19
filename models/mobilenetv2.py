@@ -358,9 +358,9 @@ class InvertedResidual(nn.Layer):  # 倒残差网络
     def _nostride_dilate(self, m, dilate):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            if m._kernel_size == (3, 3):
-                m.dilation = (dilate, dilate)
-                m.padding = (dilate, dilate)
+            if m._kernel_size == [3, 3]:
+                m._dilation = [dilate, dilate]
+                m._padding = dilate
 
     def forward(self, x):  # 正向传播过程，x为输入特征矩阵
         x_pad = self.fixed_padding(x, self.kernel_size, dilation=self.dilation)
@@ -835,15 +835,15 @@ class MobileNetV2UNetDecoder(nn.Layer):
     def _dilate(self, m, dilate):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            if m._kernel_size == (3, 3):
-                m.dilation = (dilate, dilate)
-                m.padding = (dilate, dilate)
+            if m._kernel_size == [3, 3]:
+                m._dilation = [dilate, dilate]
+                m._padding = dilate
 
     def _stride(self, m, stride):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            if m._kernel_size == (3, 3):
-                m.stride = stride
+            if m._kernel_size == [3, 3]:
+                m._stride = [stride, stride]
                 return
 
     def forward(self, x):
@@ -880,6 +880,8 @@ class MobileNetV2UNetDecoder(nn.Layer):
         l = self.dconv_pp(l7)  # 160x10x10
 
         # decode
+        print(self.layer0)
+        print('x.shape={},l0.shape={},l1.shape={},l2.shape={},l3.shape={},l4.shape={},l5.shape={},l6.shape={},l7.shape={},l.shape={}'.format(x.shape, l0.shape, l1.shape, l2.shape, l3.shape, l4.shape, l5.shape, l6.shape, l7.shape, l.shape))
         l = self.decoder_layer6(l, l6, idx6)
         l = self.decoder_layer5(l, l5)
         l = self.decoder_layer4(l, l4, idx4)
@@ -1060,8 +1062,8 @@ class MobileNetV2UNetDecoderIndexLearning(nn.Layer):
     def _stride(self, m, stride):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            if m._kernel_size == (3, 3):
-                m.stride = stride
+            if m._kernel_size == [3, 3]:
+                m._stride = [stride, stride]
                 return
 
     def forward(self, x):
@@ -1157,7 +1159,6 @@ def mobilenetv2(pretrained=False, decoder='unet_style', **kwargs):
         corresp_name = CORRESP_NAME
         model_dict = model.state_dict()
         pretrained_dict = load_url(MODEL_URLS['mobilenetv2'])
-        print(pretrained_dict)
         for name in pretrained_dict:
             if name not in corresp_name:
                 continue
