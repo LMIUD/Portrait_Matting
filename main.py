@@ -37,11 +37,11 @@ SCALES = [1, 1.5, 2]
 DATASET = 'Adobe_Image_Matting'
 DATA_DIR = '/media/hao/DATA/Combined_Dataset'
 EXP = 'indexnet_matting'
-DATA_LIST = './core/lists/train.txt'
-DATA_VAL_LIST = './core/lists/test.txt'
+DATA_LIST = '../lists/train.txt'
+DATA_VAL_LIST = '../lists/test.txt'
 RESTORE_FROM = 'model_ckpt.pdparams'
-SNAPSHOT_DIR = './core/snapshots'
-RESULT_DIR = './core/results'
+SNAPSHOT_DIR = '../snapshots'
+RESULT_DIR = '../results'
 
 # model-related parameters
 OUTPUT_STRIDE = 32
