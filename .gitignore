@@ -1,2 +1,3 @@
 __pycache__
 models/pretrained/VGG16_pretrained.pdparams
+results
