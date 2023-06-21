@@ -217,7 +217,7 @@ def main():
     if args.restore_from is not None:
         if os.path.isfile(args.restore_from):
             checkpoint = paddle.load(args.restore_from)
-            net.load_state_dict(checkpoint['state_dict'])
+            net.set_state_dict(checkpoint['state_dict'])
             if 'epoch' in checkpoint:
                 start_epoch = checkpoint['epoch']
             if 'optimizer' in checkpoint:
