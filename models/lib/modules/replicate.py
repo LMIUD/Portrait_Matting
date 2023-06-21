@@ -10,8 +10,7 @@
 
 import functools
 
-from torch.nn.parallel.data_parallel import DataParallel
-
+from paddle import DataParallel
 __all__ = [
     'CallbackContext',
     'execute_replication_callbacks',
