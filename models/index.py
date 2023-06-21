@@ -77,8 +77,8 @@ class DepthwiseO2OIndexBlock(nn.Layer):
         y = F.sigmoid(x)
         z = F.softmax(y, dim=2)
         # pixel shuffling
-        y = y.view(bs, c*4, int(h/2), int(w/2))
-        z = z.view(bs, c*4, int(h/2), int(w/2))
+        y = y.reshape([bs, c*4, int(h/2), int(w/2)])
+        z = z.reshape([bs, c*4, int(h/2), int(w/2)])
         idx_en = F.pixel_shuffle(z, 2)
         idx_de = F.pixel_shuffle(y, 2)
 
@@ -128,8 +128,8 @@ class DepthwiseM2OIndexBlock(nn.Layer):
         y = F.sigmoid(x)
         z = F.softmax(y, axis=2)
         # pixel shuffling
-        y = y.view(bs, c*4, int(h/2), int(w/2))
-        z = z.view(bs, c*4, int(h/2), int(w/2))
+        y = y.reshape([bs, c*4, int(h/2), int(w/2)])
+        z = z.reshape([bs, c*4, int(h/2), int(w/2)])
         idx_en = F.pixel_shuffle(z, 2)
         idx_de = F.pixel_shuffle(y, 2)
 

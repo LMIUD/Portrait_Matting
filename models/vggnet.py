@@ -267,7 +267,7 @@ def vgg16(pretrained=False, **kwargs):
                 model_weight[:, 3, :, :] = paddle.to_tensor(0)
                 model_dict[corresp_name[name]] = model_weight
             elif name == "classifier.0.weight":
-                model_dict[corresp_name[name]] = pretrained_dict[name].view(4096, 512, 7, 7)
+                model_dict[corresp_name[name]] = pretrained_dict[name].reshape([4096, 512, 7, 7])
             else:
                 model_dict[corresp_name[name]] = pretrained_dict[name]
         model.set_state_dict(model_dict)
