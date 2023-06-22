@@ -189,13 +189,16 @@ def main():
         else:
             pretrained_params.append(p[1])
 
+    # define optimizer scheduler
+    scheduler = MultiStepDecay(args.learning_rate, milestones=[20, 26], gamma=0.1, last_epoch=resume_epoch)
+
     # define optimizer
     optimizer = optim.Adam(
         parameters=[
             {'params': learning_params},
             {'params': pretrained_params, 'learning_rate': args.learning_rate / args.mult},
         ],
-        learning_rate=args.learning_rate
+        learning_rate=MultiStepDecay
     )
 
     # restore parameters
@@ -286,12 +289,12 @@ def main():
         return
 
     resume_epoch = -1 if start_epoch == 0 else start_epoch
-    scheduler = MultiStepDecay(args.learning_rate, milestones=[20, 26], gamma=0.1, last_epoch=resume_epoch)
+    
     for epoch in range(start_epoch, args.num_epochs):
         scheduler.step()
         np.random.seed()
         # train
-        train(net, train_loader, optimizer, epoch + 1, scheduler, args)
+        train(net, train_loader, optimizer, epoch + 1, args)
         # val
         validate(net, val_loader, epoch + 1, args)
         # save checkpoint

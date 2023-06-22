@@ -37,7 +37,7 @@ def weighted_loss(pd, gt, wl=0.5, epsilon=1e-6):
     return wl * loss_alpha + (1 - wl) * loss_composition
 
 
-def train(net, train_loader, optimizer, epoch, scheduler, args):
+def train(net, train_loader, optimizer, epoch, args):
     # switch to train mode
     net.train()
 
