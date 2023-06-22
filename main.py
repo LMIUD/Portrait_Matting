@@ -189,20 +189,34 @@ def main():
         else:
             pretrained_params.append(p[1])
 
+    # restored parameters
+    start_epoch = 0
+    if args.restore_from is not None:
+        if os.path.isfile(args.restore_from):
+            checkpoint = paddle.load(args.restore_from)
+            net.set_state_dict(checkpoint['state_dict'])
+            if 'epoch' in checkpoint:
+                start_epoch = checkpoint['epoch']
+        else:
+            with open(os.path.join(args.result_dir, args.exp + '.txt'), 'a') as f:
+                for item in arguments:
+                    print(item, ':\t', arguments[item], file=f)
+            print("==> no checkpoint found at '{}'".format(args.restore_from))
+    resume_epoch = -1 if start_epoch == 0 else start_epoch
+
     # define optimizer scheduler
     scheduler = MultiStepDecay(args.learning_rate, milestones=[20, 26], gamma=0.1, last_epoch=resume_epoch)
 
     # define optimizer
     optimizer = optim.Adam(
+        learning_rate=scheduler,
         parameters=[
             {'params': learning_params},
             {'params': pretrained_params, 'learning_rate': args.learning_rate / args.mult},
-        ],
-        learning_rate=MultiStepDecay
+        ]
     )
 
-    # restore parameters
-    start_epoch = 0
+    # restored parameters
     net.train_loss = {
         'running_loss': [],
         'epoch_loss': []
@@ -217,27 +231,18 @@ def main():
         'grad': [],
         'conn': []
     }
-    if args.restore_from is not None:
-        if os.path.isfile(args.restore_from):
-            checkpoint = paddle.load(args.restore_from)
-            net.set_state_dict(checkpoint['state_dict'])
-            if 'epoch' in checkpoint:
-                start_epoch = checkpoint['epoch']
-            if 'optimizer' in checkpoint:
-                optimizer.set_state_dict(checkpoint['optimizer'])
-            if 'train_loss' in checkpoint:
-                net.train_loss = checkpoint['train_loss']
-            if 'val_loss' in checkpoint:
-                net.val_loss = checkpoint['val_loss']
-            if 'measure' in checkpoint:
-                net.measure = checkpoint['measure']
-            print("==> load checkpoint '{}' (epoch {})"
-                  .format(args.restore_from, start_epoch))
-        else:
-            with open(os.path.join(args.result_dir, args.exp + '.txt'), 'a') as f:
-                for item in arguments:
-                    print(item, ':\t', arguments[item], file=f)
-            print("==> no checkpoint found at '{}'".format(args.restore_from))
+    if start_epoch != 0:
+        if 'optimizer' in checkpoint:
+            optimizer.set_state_dict(checkpoint['optimizer'])
+        if 'train_loss' in checkpoint:
+            net.train_loss = checkpoint['train_loss']
+        if 'val_loss' in checkpoint:
+            net.val_loss = checkpoint['val_loss']
+        if 'measure' in checkpoint:
+            net.measure = checkpoint['measure']
+        print("==> load checkpoint '{}' (epoch {})"
+                .format(args.restore_from, start_epoch))
+        
 
     # define transform
     transform_train_val = [
@@ -287,16 +292,16 @@ def main():
     if args.evaluate_only:
         validate(net, val_loader, start_epoch + 1, args)
         return
-
-    resume_epoch = -1 if start_epoch == 0 else start_epoch
     
     for epoch in range(start_epoch, args.num_epochs):
-        scheduler.step()
         np.random.seed()
         # train
         train(net, train_loader, optimizer, epoch + 1, args)
+        scheduler.step()
+        print('lr: ', optimizer.get_lr())
         # val
-        validate(net, val_loader, epoch + 1, args)
+        if epoch==49:
+            validate(net, val_loader, epoch + 1, args)
         # save checkpoint
         state = {
             'state_dict': net.state_dict(),
