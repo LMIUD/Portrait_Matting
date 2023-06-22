@@ -18,8 +18,8 @@ def worker_init_fn(worker_id):
 # implementation of the composition loss and alpha loss
 def weighted_loss(pd, gt, wl=0.5, epsilon=1e-6):
     bs, _, h, w = pd.shape
-    mask = gt[:, 1, :, :].view(bs, 1, h, w)
-    alpha_gt = gt[:, 0, :, :].view(bs, 1, h, w)
+    mask = gt[:, 1, :, :].reshape([bs, 1, h, w])
+    alpha_gt = gt[:, 0, :, :].reshape([bs, 1, h, w])
     diff_alpha = (pd - alpha_gt) * mask
     loss_alpha = paddle.sqrt(diff_alpha * diff_alpha + epsilon ** 2)
     loss_alpha = loss_alpha.sum(dim=2).sum(dim=2) / mask.sum(dim=2).sum(dim=2)
