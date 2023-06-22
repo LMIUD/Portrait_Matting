@@ -35,7 +35,7 @@ SCALES = [1, 1.5, 2]
 
 # system-io-related parameters
 DATASET = 'Adobe_Image_Matting'
-DATA_DIR = '/media/hao/DATA/Combined_Dataset'
+DATA_DIR = 'datasets/Combined_Dataset'
 EXP = 'indexnet_matting'
 DATA_LIST = './datasets/lists/train.txt'
 DATA_VAL_LIST = './datasets/lists/test.txt'
