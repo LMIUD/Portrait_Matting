@@ -17,7 +17,7 @@ def worker_init_fn(worker_id):
 
 # implementation of the composition loss and alpha loss
 def weighted_loss(pd, gt, wl=0.5, epsilon=1e-6):
-    bs, _, h, w = pd.size()
+    bs, _, h, w = pd.shape
     mask = gt[:, 1, :, :].view(bs, 1, h, w)
     alpha_gt = gt[:, 0, :, :].view(bs, 1, h, w)
     diff_alpha = (pd - alpha_gt) * mask
@@ -100,7 +100,7 @@ def validate(net, val_loader, epoch, args):
         for i, sample in enumerate(val_loader):
             image, targets = sample['image'], sample['alpha']
 
-            h, w = image.size()[2:]
+            h, w = image.shape[2:]
             image = image.squeeze().numpy().transpose(1, 2, 0)
             # image = image_rescale(image, scale)
             image = image_alignment(image, stride, odd=args.crop_size % 2 == 1)
