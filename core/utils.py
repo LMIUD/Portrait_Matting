@@ -89,7 +89,7 @@ def compute_connectivity_loss(pd, gt, mask, step=0.1):
 
 
 def image_alignment(x, output_stride, odd=False):
-    imsize = np.asarray(x.shape[:2], dtype=np.float)
+    imsize = np.asarray(x.shape[:2], dtype=np.float64)
     if odd:
         new_imsize = np.ceil(imsize / output_stride) * output_stride + 1
     else:
