@@ -1,14 +1,14 @@
 import os
 
-num_bgs_train = 100
+num_bgs_train = 1
 num_bgs_test = 20
 train_data_file = 'train.txt'
 test_data_file = 'test.txt'
 
-train_file = '/media/hao/DATA/Combined_Dataset/Training_set/training_fg_names.txt'
-train_file_bg = '/media/hao/DATA/Combined_Dataset/Training_set/training_bg_names.txt'
-test_file = '/media/hao/DATA/Combined_Dataset/Test_set/test_fg_names.txt'
-fg_names = [name for name in open(train_file).read().splitlines()]
+train_file_fg = '../Combined_Dataset/Training_set/training_fg_names.txt'
+train_file_bg = '../Combined_Dataset/Training_set/training_bg_names.txt'
+test_file = '../Combined_Dataset/Test_set/test_fg_names.txt'
+fg_names = [name for name in open(train_file_fg).read().splitlines()]
 bg_names = [name for name in open(train_file_bg).read().splitlines()]
 fg_names_test = [name for name in open(test_file).read().splitlines()]
 
@@ -16,7 +16,7 @@ image_head = 'merged'
 alpha_head = 'alpha'
 trimap_head = 'trimaps'
 fg_head = 'fg'
-bg_head = 'train2014'
+bg_head = 'bg_train2014'
 
 def write_datalist(img_name, bg_names, idx, f):
     prefix = 'Training_set'
