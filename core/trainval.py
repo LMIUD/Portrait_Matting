@@ -22,7 +22,7 @@ def weighted_loss(pd, gt, wl=0.5, epsilon=1e-6):
     alpha_gt = gt[:, 0, :, :].reshape([bs, 1, h, w])
     diff_alpha = (pd - alpha_gt) * mask
     loss_alpha = paddle.sqrt(diff_alpha * diff_alpha + epsilon ** 2)
-    loss_alpha = loss_alpha.sum(dim=2).sum(dim=2) / mask.sum(dim=2).sum(dim=2)
+    loss_alpha = loss_alpha.sum(axis=2).sum(axis=2) / mask.sum(axis=2).sum(axis=2)
     loss_alpha = loss_alpha.sum() / bs
 
     fg = gt[:, 2:5, :, :]
@@ -31,7 +31,7 @@ def weighted_loss(pd, gt, wl=0.5, epsilon=1e-6):
     c_g = gt[:, 8:11, :, :]
     diff_color = (c_p - c_g) * mask
     loss_composition = paddle.sqrt(diff_color * diff_color + epsilon ** 2)
-    loss_composition = loss_composition.sum(dim=2).sum(dim=2) / mask.sum(dim=2).sum(dim=2)
+    loss_composition = loss_composition.sum(axis=2).sum(axis=2) / mask.sum(axis=2).sum(axis=2)
     loss_composition = loss_composition.sum() / bs
 
     return wl * loss_alpha + (1 - wl) * loss_composition
@@ -45,7 +45,7 @@ def train(net, train_loader, optimizer, epoch, scheduler, args):
     avg_frame_rate = 0.0
     start = time()
     for i, sample in enumerate(train_loader):
-        inputs, targets = sample['image'], sample['alpha']
+        inputs, targets = paddle.to_tensor(sample['image']), paddle.to_tensor(sample['alpha'])
         inputs, targets = inputs.cuda(), targets.cuda()
         # forward
         outputs = net(inputs)

@@ -147,12 +147,12 @@ class ToTensor(object):
 
     def __call__(self, sample):
         image, alpha = sample['image'], sample['alpha']
-        # swap color axis
-        # numpy image: H x W x C
-        # torch image: C X H X W
+        # # swap color axis
+        # # numpy image: H x W x C
+        # # torch image: C X H X W
         image = image.transpose((2, 0, 1))
         alpha = alpha.transpose((2, 0, 1))
-        return {'image': paddle.to_tensor(image), 'alpha': paddle.to_tensor(alpha)}
+        return {'image': image, 'alpha': alpha}
 
 
 class AdobeImageMattingDataset(Dataset):
@@ -233,6 +233,7 @@ class AdobeImageMattingDataset(Dataset):
         }
         if self.transform:
             sample = self.transform(sample)
+            # sample = {'image': paddle.to_tensor(sample['image']), 'alpha': paddle.to_tensor(sample['alpha'])}
         return sample
 
 
@@ -242,8 +243,8 @@ if __name__ == "__main__":
     IMG_STD = np.array([0.229, 0.224, 0.225, 1]).reshape((1, 1, 4))
 
     dataset = AdobeImageMattingDataset(
-        data_file='train.txt',
-        data_dir='/media/hao/DATA/Combined_Dataset',
+        data_file='./datasets/lists/train.txt',
+        data_dir='./datasets/Combined_Dataset',
         train=True,
         transform=transforms.Compose([
             RandomCrop(320, [1, 1.5, 2]),
