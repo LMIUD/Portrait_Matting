@@ -8,7 +8,7 @@ from PIL import Image
 import paddle
 from core.utils import *
 
-def save_checkpoint(state, snapshot_dir, filename='.pth.tar'):
+def save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams'):
     paddle.save(state, '{}/{}'.format(snapshot_dir, filename))
 
 

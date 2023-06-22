@@ -306,10 +306,10 @@ def main():
             'val_loss': net.val_loss,
             'measure': net.measure
         }
-        save_checkpoint(state, snapshot_dir, filename='model_ckpt.pth.tar')
+        save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams')
         print(args.exp + ' epoch {} finished!'.format(epoch + 1))
         if len(net.measure['grad']) > 1 and net.measure['grad'][-1] <= min(net.measure['grad'][:-1]):
-            save_checkpoint(state, snapshot_dir, filename='model_best.pth.tar')
+            save_checkpoint(state, snapshot_dir, filename='model_best.pdparams')
     print('Experiments with ' + args.exp + ' done!')
 
 
