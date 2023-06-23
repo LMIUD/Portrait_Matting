@@ -1,7 +1,7 @@
 import os
 
-num_bgs_train = 1
-num_bgs_test = 20
+num_bgs_train = 99
+num_bgs_test = 1
 train_data_file = 'train.txt'
 test_data_file = 'test.txt'
 
@@ -35,8 +35,8 @@ def write_datalist_test(img_name, idx, f):
 
 if __name__ == '__main__':
     with open(train_data_file, 'w') as f:
-        count = 0
         for name in fg_names:
+            count = 0
             img_name, ext = os.path.splitext(name)
             for idx in range(num_bgs_train):
                 write_datalist(img_name, bg_names[count], idx, f)
