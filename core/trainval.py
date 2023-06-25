@@ -8,7 +8,9 @@ from PIL import Image
 import paddle
 from core.utils import *
 
-def save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams'):
+def save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams', epoch=None):
+    if os.path.isfile(os.path.join(snapshot_dir, filename)) & filename=='model_ckpt.pdparams':
+        os.rename(os.path.join(snapshot_dir, filename), os.path.join(snapshot_dir, 'model_ckpt_{}.pdparams'.format(epoch-1)))
     paddle.save(state, '{}/{}'.format(snapshot_dir, filename))
 
 

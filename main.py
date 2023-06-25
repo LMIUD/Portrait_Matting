@@ -60,9 +60,9 @@ INDEX_MODE = 'm2o'  # choose in ['o2o', 'm2o']
 # facilitates the corner alignment between the image and the feature map
 # ---------------------------------------------------------------------------------
 # training-related parameters
-BATCH_SIZE = 2
+BATCH_SIZE = 6
 CROP_SIZE = 320
-LEARNING_RATE = 1e-5
+LEARNING_RATE = 1e-4
 MOMENTUM = 0.9
 MULT = 100
 NUM_EPOCHS = 100
@@ -311,7 +311,7 @@ def main():
             'val_loss': net.val_loss,
             'measure': net.measure
         }
-        save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams')
+        save_checkpoint(state, snapshot_dir, filename='model_ckpt.pdparams', epoch=epoch + 1)
         print(args.exp + ' epoch {} finished!'.format(epoch + 1))
         if len(net.measure['grad']) > 1 and net.measure['grad'][-1] <= min(net.measure['grad'][:-1]):
             save_checkpoint(state, snapshot_dir, filename='model_best.pdparams')
