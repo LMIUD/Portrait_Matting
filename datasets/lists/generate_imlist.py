@@ -1,7 +1,7 @@
 import os
 
-num_bgs_train = 99
-num_bgs_test = 1
+num_bgs_train = 100
+num_bgs_test = 5
 train_data_file = 'train.txt'
 test_data_file = 'test.txt'
 
