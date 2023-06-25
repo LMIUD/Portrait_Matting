@@ -77,7 +77,6 @@ def train(net, train_loader, optimizer, epoch, args):
                       avg_frame_rate
                   ))
         start = time()
-        break
     net.train_loss['epoch_loss'].append(running_loss / (i + 1))
 
 
