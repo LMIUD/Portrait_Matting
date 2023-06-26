@@ -205,7 +205,7 @@ def main():
     resume_epoch = -1 if start_epoch == 0 else start_epoch
 
     # define optimizer scheduler
-    scheduler = MultiStepDecay(args.learning_rate, milestones=[20, 26], gamma=0.1, last_epoch=resume_epoch)
+    scheduler = MultiStepDecay(args.learning_rate, milestones=[20, 26, 40], gamma=0.1, last_epoch=resume_epoch)
 
     # define optimizer
     optimizer = optim.Adam(
