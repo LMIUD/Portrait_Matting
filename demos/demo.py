@@ -114,7 +114,7 @@ def inference(image_path, trimap_path):
 
 if __name__ == "__main__":
     image_path = [
-        '../examples/images/big_breast_girl.jpg'
+        '../examples/images/girl_wearing_glasses.jpg'
         # './examples/images/beach-747750_1280_2.png',
         # './examples/images/boy-1518482_1920_9.png',
         # './examples/images/light-bulb-1104515_1280_3.png',
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # './examples/images/wedding-dresses-1486260_1280_3.png'
     ]
     trimap_path = [
-        '../examples/trimaps/big_breast_girl.png'
+        '../examples/trimaps/girl_wearing_glasses.png'
         # './examples/trimaps/beach-747750_1280_2.png',
         # './examples/trimaps/boy-1518482_1920_9.png',
         # './examples/trimaps/light-bulb-1104515_1280_3.png',
