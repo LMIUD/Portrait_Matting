@@ -82,7 +82,7 @@ class IndexedDecoder(nn.Layer):
     
     def visualize(self, x, indices=None):
         l = self.upsample(x, indices) if indices is not None else x
-        l = l.mean(dim=1).squeeze()
+        l = l.mean(axis=1).squeeze()
         l = l.cpu().numpy()
         l = l / l.max() * 255.
         plt.figure()
@@ -126,7 +126,7 @@ class IndexedUpsamlping(nn.Layer):
     
     def visualize(self, x, indices=None):
         l = self.upsample(x, indices) if indices is not None else x
-        l = l.mean(dim=1).squeeze()
+        l = l.mean(axis=1).squeeze()
         l = l.detach().cpu().numpy()
         l = l / l.max() * 255.
         plt.figure()
