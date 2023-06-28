@@ -19,7 +19,7 @@ IMG_MEAN = np.array([0.485, 0.456, 0.406, 0]).reshape((1, 1, 4))
 IMG_STD = np.array([0.229, 0.224, 0.225, 1]).reshape((1, 1, 4))
 
 STRIDE = 32
-RESTORE_FROM = './pretrained/indexnet_matting.pth.tar'
+RESTORE_FROM = '../snapshots/adobe_image_matting/indexnet_matting/model_best.pdparams'
 RESULT_DIR = './examples/mattes'
 
 device = paddle.set_device("gpu" if paddle.device.is_compiled_with_cuda() else "cpu")
@@ -42,19 +42,11 @@ net = mobilenetv2(
     use_context=True
 )
 
-try:
-    checkpoint = paddle.load(RESTORE_FROM, map_location=device)
-    pretrained_dict = OrderedDict()
-    for key, value in checkpoint['state_dict'].items():
-        if 'module' in key:
-            key = key[7:]
-        pretrained_dict[key] = value
-except:
-    raise Exception('Please download the pretrained model!')
-net.load_state_dict(pretrained_dict)
+
+checkpoint = paddle.load(RESTORE_FROM)
+pretrained_dict = OrderedDict()
+net.set_state_dict(checkpoint['state_dict'])
 net.to(device)
-if paddle.device.is_compiled_with_cuda():
-    net = nn.DataParallel(net)
 
 # switch to eval mode
 net.eval()
@@ -98,7 +90,7 @@ def inference(image_path, trimap_path):
 
         image = image_alignment(image, STRIDE)
         inputs = paddle.to_tensor(np.expand_dims(image.transpose(2, 0, 1), axis=0))
-        inputs = inputs.to(device)
+        inputs = inputs.cuda()
 
         # inference
         start = time()
@@ -122,18 +114,20 @@ def inference(image_path, trimap_path):
 
 if __name__ == "__main__":
     image_path = [
-        './examples/images/beach-747750_1280_2.png',
-        './examples/images/boy-1518482_1920_9.png',
-        './examples/images/light-bulb-1104515_1280_3.png',
-        './examples/images/spring-289527_1920_15.png',
-        './examples/images/wedding-dresses-1486260_1280_3.png'
+        '../examples/images/big_breast_girl.jpg'
+        # './examples/images/beach-747750_1280_2.png',
+        # './examples/images/boy-1518482_1920_9.png',
+        # './examples/images/light-bulb-1104515_1280_3.png',
+        # './examples/images/spring-289527_1920_15.png',
+        # './examples/images/wedding-dresses-1486260_1280_3.png'
     ]
     trimap_path = [
-        './examples/trimaps/beach-747750_1280_2.png',
-        './examples/trimaps/boy-1518482_1920_9.png',
-        './examples/trimaps/light-bulb-1104515_1280_3.png',
-        './examples/trimaps/spring-289527_1920_15.png',
-        './examples/trimaps/wedding-dresses-1486260_1280_3.png'
+        '../examples/trimaps/big_breast_girl.png'
+        # './examples/trimaps/beach-747750_1280_2.png',
+        # './examples/trimaps/boy-1518482_1920_9.png',
+        # './examples/trimaps/light-bulb-1104515_1280_3.png',
+        # './examples/trimaps/spring-289527_1920_15.png',
+        # './examples/trimaps/wedding-dresses-1486260_1280_3.png'
     ]
     for image, trimap in zip(image_path, trimap_path):
         inference(image, trimap)
