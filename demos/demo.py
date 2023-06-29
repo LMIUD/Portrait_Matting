@@ -20,7 +20,7 @@ IMG_STD = np.array([0.229, 0.224, 0.225, 1]).reshape((1, 1, 4))
 
 STRIDE = 32
 RESTORE_FROM = '../snapshots/adobe_image_matting/indexnet_matting/model_best.pdparams'
-RESULT_DIR = './examples/mattes'
+RESULT_DIR = '../examples/mattes'
 
 device = paddle.set_device("gpu" if paddle.device.is_compiled_with_cuda() else "cpu")
 
@@ -114,20 +114,18 @@ def inference(image_path, trimap_path):
 
 if __name__ == "__main__":
     image_path = [
-        '../examples/images/girl_wearing_glasses.jpg'
-        # './examples/images/beach-747750_1280_2.png',
-        # './examples/images/boy-1518482_1920_9.png',
-        # './examples/images/light-bulb-1104515_1280_3.png',
-        # './examples/images/spring-289527_1920_15.png',
-        # './examples/images/wedding-dresses-1486260_1280_3.png'
+        './examples/images/beach-747750_1280_2.png',
+        './examples/images/boy-1518482_1920_9.png',
+        './examples/images/light-bulb-1104515_1280_3.png',
+        './examples/images/spring-289527_1920_15.png',
+        './examples/images/wedding-dresses-1486260_1280_3.png'
     ]
     trimap_path = [
-        '../examples/trimaps/girl_wearing_glasses.png'
-        # './examples/trimaps/beach-747750_1280_2.png',
-        # './examples/trimaps/boy-1518482_1920_9.png',
-        # './examples/trimaps/light-bulb-1104515_1280_3.png',
-        # './examples/trimaps/spring-289527_1920_15.png',
-        # './examples/trimaps/wedding-dresses-1486260_1280_3.png'
+        './examples/trimaps/beach-747750_1280_2.png',
+        './examples/trimaps/boy-1518482_1920_9.png',
+        './examples/trimaps/light-bulb-1104515_1280_3.png',
+        './examples/trimaps/spring-289527_1920_15.png',
+        './examples/trimaps/wedding-dresses-1486260_1280_3.png'
     ]
     for image, trimap in zip(image_path, trimap_path):
         inference(image, trimap)
