@@ -51,21 +51,13 @@ DECODER_KERNEL_SIZE = 5
 BACKBONE = 'mobilenetv2'  # choose in ['mobilenetv2', 'vgg16']
 INDEXNET = 'depthwise'  # choose in ['holistic', 'depthwise']
 INDEX_MODE = 'm2o'  # choose in ['o2o', 'm2o']
-
-# ---------------------------------------------------------------------------------
-# TIPS:
-# for deeplabv3+ and refinenet, we expect the input size is odd, say 321, to be
-# consistent with the behaviour of bilinear upsamping, while for vgg16 or our
-# modified mobilenetv2, the input size should be even number, say 320. This
-# facilitates the corner alignment between the image and the feature map
-# ---------------------------------------------------------------------------------
 # training-related parameters
-BATCH_SIZE = 6
+BATCH_SIZE = 5
 CROP_SIZE = 320
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-5
 MOMENTUM = 0.9
 MULT = 100
-NUM_EPOCHS = 100
+NUM_EPOCHS = 50
 NUM_CPU_WORKERS = 0
 PRINT_EVERY = 1
 RANDOM_SEED = 6
@@ -209,11 +201,12 @@ def main():
 
     # define optimizer
     optimizer = optim.Adam(
-        learning_rate=scheduler,
         parameters=[
             {'params': learning_params},
-            {'params': pretrained_params, 'learning_rate': args.learning_rate / args.mult},
-        ]
+            {'params': pretrained_params, 'learning_rate':
+                args.learning_rate / args.mult},
+        ],
+        learning_rate=scheduler
     )
 
     # restored parameters
@@ -289,19 +282,27 @@ def main():
     )
 
     print('alchemy start...')
-    if args.evaluate_only:
+    if True:
         validate(net, val_loader, start_epoch + 1, args)
         return
     
     for epoch in range(start_epoch, args.num_epochs):
         np.random.seed()
+
+        # validate(net, val_loader, epoch, args)
+
         # train
+        start = time()
         train(net, train_loader, optimizer, epoch + 1, args)
+        end = time()
         scheduler.step()
+
         print('lr: ', optimizer.get_lr())
+
         # val
-        if epoch==49:
+        if (epoch + 1) % 10 == 0:
             validate(net, val_loader, epoch + 1, args)
+
         # save checkpoint
         state = {
             'state_dict': net.state_dict(),
